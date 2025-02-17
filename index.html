@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LongAlign: Improving Long-Text Alignment for Text-to-Image Diffusion Models</title>
+    <style>
+        body {
+            --body-margin: 100px; /* 定义 body 的边距 */
+            margin: var(--body-margin); /* 使用变量设置边距 */
+            font-family: 'Times New Roman', serif; /* 更正式的字体 */
+            margin: 20px;
+            line-height: 1.6;
+            color: #333; /* 更柔和的文本颜色 */
+            font-size: 1.0em; /* 设置 body 的 font-size 为 1.0em */
+            max-width: 900px; /* 设置最大宽度 */
+            margin-left: auto; /* 居中显示 */
+            margin-right: auto; /* 居中显示 */
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2em; /* 调整标题大小 */
+            margin-bottom: 0.5em; /* 调整标题下边距 */
+        }
+
+        h2 {
+            margin-top: 1em; /* 调整二级标题上边距 - 修改这里 */
+            font-size: 1.5em; /* 调整二级标题大小 */
+            border-bottom: 1px solid #ccc; /* 添加下划线 */
+            padding-bottom: 0.3em; /* 调整下划线下边距 */
+        }
+
+        .authors {
+            text-align: center;
+            margin-bottom: 1em; /* 调整作者信息下边距 */
+            font-size: 0.9em; /* 缩小作者信息字体 */
+        }
+
+        .authors sup {
+            font-size: 0.7em; /* 更小的上标字体 */
+            vertical-align: super;
+        }
+
+        .abstract {
+            margin-top: 0.5em; /* 调整摘要上边距 - 修改这里 */
+            padding: 1em;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+            font-size: 1.0em; /* 调整摘要字体大小 */
+        }
+
+        /* .code {
+            text-align: center;
+            margin-top: 2em;
+        } */
+
+        .code a {
+            background-color: #428bca; /* 更专业的颜色 */
+            color: white;
+            padding: 0.5em 1em;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 0.9em; /* 调整代码链接字体大小 */
+        }
+
+        .code a:hover {
+            background-color: #3071a9; /* 悬停时的颜色 */
+        }
+
+        .citation {
+            /* margin-top: 2em; */
+            font-style: italic;
+            font-size: 0.9em; /* 调整引用字体大小 */
+        } 
+
+        /* Table Styling */
+        
+        .table-container {
+            overflow-x: auto; /* 保持水平滚动 */
+            margin-left: calc(-1 * var(--body-margin)); /* 向左超出 body 边距 */
+            margin-right: calc(-1 * var(--body-margin)); /* 向右超出 body 边距 */
+        }
+
+        .table-container {
+            overflow-x: auto; /* 保持水平滚动 */
+            /* 默认情况下，保持在屏幕范围内 */
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        /* 当屏幕宽度大于某个阈值时，超出 body 边距 */
+        @media (min-width: 1100px) { /* 假设 900px 是你认为屏幕宽度足够的阈值 */
+            .table-container {
+                margin-left: calc(-1 * var(--body-margin)); /* 向左超出 body 边距 */
+                margin-right: calc(-1 * var(--body-margin)); /* 向右超出 body 边距 */
+            }
+        }
+
+        .experiment-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1em;
+        }
+
+        .experiment-table th, .experiment-table td {
+            border: 1px solid #ddd;
+            padding: 0.5em;
+            text-align: left;
+            font-size: 1.0em; /* 调整表格字体大小 */
+        }
+
+        .experiment-table th {
+            background-color: #f2f2f2;
+            font-weight: bold; /* 加粗表头 */
+        }
+
+        .experiment-table img {
+            max-width: 320px; /* 略微减小图片尺寸 */
+            height: auto; /* 保持宽高比 */
+            display: block;
+            margin: 0 auto; /* Center images */
+        }
+
+        .experiment-table .prompt {
+            font-family: monospace;
+            white-space: pre-wrap;
+            overflow: auto; /* Enable scrolling for long prompts */
+            max-height: 310px; /* 减小 prompt 最大高度 */
+            padding: 0.5em;
+            border: 1px solid #eee;
+            background-color: #fefefe;
+            font-size: 1.0em; /* 调整prompt字体大小 */
+        }
+
+        .thanks {
+            font-size: 0.75em; /* 更小的感谢信息字体 */
+            font-style: italic;
+            display: block; /* 确保占据一行 */
+            text-align: center; /* 居中显示 */
+            margin-top: 0.5em; /* 调整上边距 */
+        }
+
+        /* Section Styling */
+        section {
+            margin-bottom: 2em; /* 增加 section 之间的间距 */
+        }
+
+        img {
+            max-width: 750px; /* 确保图片不会超出容器宽度 */
+            height: auto; /* 保持宽高比 */
+            display: block; /* 将图片设置为块级元素 */
+            margin: 0 auto; /* 左右自动边距以居中 */
+            margin-bottom: 0.25em;
+        }
+
+        .copyright {
+            text-align: center;
+            font-size: 0.8em;
+            margin-top: 2em;
+            color: #777;
+        }
+
+        .tags {
+            text-align: center;
+            margin-bottom: 0.5em; /* 调整标签下边距 */
+        }
+
+        .tags a {
+            display: inline-block;
+            margin: 0 0.5em;
+            padding: 0.3em 0.7em;
+            background-color: #eee;
+            color: #333;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 0.8em;
+        }
+
+        .tags a:hover {
+            background-color: #ddd;
+        }
+
+        .citation-container {
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+            overflow-x: auto; /* 支持横向滚动 */
+            margin-top: 0.5em; /* 调整摘要上边距 - 修改这里 */
+            padding: 1em;
+        }
+
+        .citation-code {
+            white-space: pre-wrap; /* 保持格式 */
+            line-height: 1.4; /* 行高 */
+        }
+    </style>
+</head>
+<body>
+
+    <section>
+        <h1>LongAlign: Improving Long-Text Alignment for Text-to-Image Diffusion Models</h1>
+    </section>
+
+    <section class="authors">
+        Luping Liu<sup>*1,2</sup>, Chao Du<sup>†2</sup>, Tianyu Pang<sup>2</sup>, Zehan Wang<sup>*2,4</sup>, Chongxuan Li<sup>3,5</sup>, Dong Xu<sup>†1</sup>
+        <br>
+        <sup>1</sup>The University of Hong Kong; <sup>2</sup>Sea AI Lab, Singapore; <sup>3</sup>Renmin University of China;<br><sup>4</sup>Zhejiang University; <sup>5</sup>Beijing Key Laboratory of Big Data Management and Analysis Methods
+        <br>
+        <small>
+            <a href="mailto:luping.liu@connect.hku.hk">luping.liu@connect.hku.hk</a>
+        </small>
+        <p class="thanks"><sup>*</sup>Work done during Luping Liu and Zehan Wang's associate memberships at Sea AI Lab. <br><sup>†</sup>Corresponding authors.</p>
+        <div class="tags">
+            <a href="https://arxiv.org/abs/2410.11817">ArXiv</a>
+            <a href="https://github.com/luping-liu/LongAlign">GitHub</a>
+            <a href="https://huggingface.co/collections/luping-liu/longalign-67b35084d4665a0448f8b160">HuggingFace</a>
+            <a href="#experiment-table">Gallery</a>
+        </div>
+    </section>
+
+    <section class="abstract">
+        <h2>Abstract</h2>
+        <p>
+            The rapid advancement of text-to-image (T2I) diffusion models has enabled them to generate unprecedented results from given texts. However, as text inputs become longer, existing encoding methods like CLIP face limitations, and aligning the generated images with long texts becomes challenging. To tackle these issues, we propose <i>LongAlign</i>, which includes a segment-level encoding method for processing long texts and a decomposed preference optimization method for effective alignment training. For segment-level encoding, long texts are divided into multiple segments and processed separately. This method overcomes the maximum input length limits of pretrained encoding models. For preference optimization, we provide decomposed CLIP-based preference models to fine-tune diffusion models. Specifically, to utilize CLIP-based preference models for T2I alignment, we delve into their scoring mechanisms and find that the preference scores can be decomposed into two components: a text-relevant part that measures T2I alignment and a text-irrelevant part that assesses other visual aspects of human preference. Additionally, we find that the text-irrelevant part contributes to a common overfitting problem during fine-tuning. To address this, we propose a reweighting strategy that assigns different weights to these two components, thereby reducing overfitting and enhancing alignment. After fine-tuning $512\times 512$ Stable Diffusion (SD) v1.5 for about 20 hours using our method, the fine-tuned SD outperforms stronger foundation models in T2I alignment, such as PixArt-$\alpha$ and Kandinsky v2.2.
+        </p>
+    </section>
+
+    <section>
+        <h2>Method</h2>
+        <!-- <p><strong>Main Idea:</strong> LongAlign addresses the challenge of encoding long texts for text-to-image (T2I) diffusion models and preference models by introducing a segment-level encoding approach. This method divides long texts into segments, encodes each segment individually, and then merges the resulting embeddings.</p> -->
+
+        <h3>Segment-Level Text Encoding</h3>
+
+        <p><strong>Problem:</strong> Although CLIP-like models are commonly used for representation encoding, result evaluation, and reward fine-tuning, existing CLIP-based models have limitations on input text length.</p>
+
+        <p><strong>Solution:</strong></p>
+        <ul>
+        <li><strong>For representation encoding:</strong> We encode each segment (e.g., each sentence) using CLIP and then merge the embeddings. A careful merging strategy is employed to manage special tokens (&lt;sot&gt;, &lt;eot&gt;, &lt;pad&gt;) to avoid issues with duplicated embeddings for these tokens after merging.</li>
+        <li><strong>For evaluation and reward fine-tuning:</strong> We introduce a segment-level loss function $\mathcal{L}_{i \succ j}^{\text{seg}}$ that allows CLIP-based preference models to process long texts and produce detailed segment-level preference scores (Denscore). 
+        <p>
+            \[
+            \mathcal{L}_{i \succ j}^{\text{seg}} = \frac{\exp\left(\sum_{k=i}^K \mathcal{R}(x_i, \hat{p}_k) / K\right)}{\exp\left(\sum_{k=i}^K \mathcal{R}(x_i, \hat{p}_k) / K\right) + \exp\left(\sum_{k=i}^K \mathcal{R}(x_j, \hat{p}_k) / K\right)},
+            \]
+        </p>
+        where we split the long-text condition \( p \) into \( K \) segments, denoted as \( \{\hat{p}_k\}_{k=1}^K \).
+        </li>
+        </ul>
+
+        <h3>Preference Decomposition and Reweighting</h3>
+
+        <p><strong>Problem:</strong> Preference optimization can effectively enhance T2I diffusion models, but this fine-tuning process encounters significant overfitting challenges.
+        </p>
+
+        <p><strong>Solution:</strong></p>
+        <ul>
+        <li><strong>Preference orthogonal decomposition:</strong> Human preferences can be categorized into text-irrelevant and text-relevant components. The former leads to significant overfitting. Specifically, in CLIP's text embedding, these two components correspond to the common direction $\mathbf{V}$ and the remaining parts.
+        </li>
+        <img src="data/decomposition.webp" alt="">
+
+        <li><strong>Gradient-reweighted reward fine-tuning:</strong> Fine-tune the diffusion model with a reweighted gradient that minimizes the influence of the text-irrelevant component $\mathbf{V}$, thereby reducing overfitting and enhancing alignment.
+        <p>
+            \[
+            \partial_\theta (1-\mathbb{E}_{x_T, p}\mathcal{R}(x_0^*, p)) \approx -\mathbb{E}_{p}( (\omega (\eta \mathbf{V}) + \mathcal{C}_{P}^{\bot}(p))^T \mathbb{E}_{x_T} \partial_{\theta} (\mathcal{C}_{X}(x_0^*)) ),
+            \]
+        </p>
+        where $\omega$ is the reweighting factor for the common direction $\mathbf{V}$.
+        </li>
+        <img src="data/more_reward.webp" alt="">
+        </ul>
+
+    </section>
+
+    <section>
+        <h2>Result</h2>
+        
+        The results compare the original SDXL with our LongAlign fine-tuned version of SDXL.
+        <div class="table-container">
+            <table class="experiment-table" id="experiment-table">
+                <thead>
+                    <tr>
+                        <th>Image 1 (w/o LongAlign)</th>
+                        <th>Image 2 (w LongAlign)</th>
+                        <th>Prompt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><img src="data/6-output-base.jpg" alt="Baseline Result"></td>
+                        <td><img src="data/6-output-reward.jpg" alt="LongAlign Result"></td>
+                        <td>
+                            <div class="prompt">The image captures the exterior of an HSBC bank branch. Dominating the scene is a gray building, its facade punctuated by a large window on the right side. This window, framed in black, is divided into six panes, each reflecting the world outside. Above this window, a red and white sign proudly displays the HSBC logo. The letters "HSBC" are written in black, standing out against the white background of the sign. To the right of the logo, a red diamond-shaped symbol adds a splash of color to the scene. The image is a blend of urban architecture and corporate branding, a snapshot of a moment in the life of the city.</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><img src="data/296-output-base.jpg" alt="Baseline Result"></td>
+                        <td><img src="data/296-output-reward.jpg" alt="LongAlign Result"></td>
+                        <td>
+                            <div class="prompt">The image depicts a fantastical scene featuring a large ship with a distinctive design. The ship is predominantly dark in color, with intricate carvings and decorations that suggest a historical or mythical inspiration. The most striking feature of the ship is the presence of a large, elephant-like head at the bow, which is facing towards the viewer. This head is detailed and realistic, with tusks and a trunk that are prominently displayed. The ship is sailing on a body of water, with a clear sky above and a calm, reflective surface below. In the background, there is a rocky outcrop that adds to the sense of a natural, outdoor setting. On the deck of the ship, there are several people visible, although they are too small to discern any specific details about them. The ship is also adorned with multiple flags, which are attached to the mast and the bow. These flags are not detailed enough to identify any specific symbols or insignias. The overall style of the image is realistic with a touch of fantasy, as evidenced by the elephant head and the elaborate carvings on the ship. The lighting and shadows suggest that the image is set during the daytime, with the sun casting a warm glow on the scene. There are no visible texts or brands in the image.</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><img src="data/29-output-base.jpg" alt="Baseline Result"></td>
+                        <td><img src="data/29-output-reward.jpg" alt="LongAlign Result"></td>
+                        <td>
+                            <div class="prompt">The image presents a 3D rendering of a futuristic car, which is the central focus of the composition. The car is predominantly black, with a glossy finish that reflects the surrounding environment. It's equipped with a large, transparent bubble-like dome on the roof, through which a small astronaut can be seen. The astronaut, dressed in a black suit with a helmet, is floating in space, surrounded by stars and planets. The car is not just a vehicle but a spacecraft, as indicated by the presence of the astronaut and the celestial backdrop. The car's design is sleek and modern, with a curved front and a pointed rear. The wheels are large and silver, adding to the futuristic aesthetic. The background of the image is a dark blue, providing a stark contrast to the black car and the astronaut. This contrast further emphasizes the car and the astronaut, making them the focal points of the image. Overall, the image is a blend of science fiction and modern design, creating a visually striking and imaginative scene.</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><img src="data/39-output-base.jpg" alt="Baseline Result"></td>
+                        <td><img src="data/39-output-reward.jpg" alt="LongAlign Result"></td>
+                        <td>
+                            <div class="prompt">The image is a close-up portrait of a man with a serious expression. His hair is styled in a slicked-back manner, and his facial features are highlighted by the lighting, which casts a dramatic shadow on his face. The man's eyes are directed towards the camera, and his eyebrows are slightly furrowed, adding to the intensity of his expression. The most striking element of the image is the fire that appears to be emanating from the man's neck and shoulders. The fire is depicted in a realistic style, with orange and yellow hues that suggest a bright, intense flame. The fire is not contained within the image; it seems to be flowing outward, creating a sense of movement and energy. The background of the image is dark, which serves to highlight the man and the fire. The darkness also helps to emphasize the contrast between the man's skin and the fiery elements in the image. Overall, the image is a powerful and dramatic portrait that combines realistic elements with artistic flair. The use of fire as a visual motif adds a layer of intrigue and mystery to the image, inviting the viewer to wonder about the story behind the scene.</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><img src="data/58-output-base.jpg" alt="Baseline Result"></td>
+                        <td><img src="data/58-output-reward.jpg" alt="LongAlign Result"></td>
+                        <td>
+                            <div class="prompt">In the center of the image, a daring motorcyclist is captured in mid-air, performing a thrilling stunt on an orange and black dirt bike. The rider, clad in a black and white helmet, grips the handlebars tightly, demonstrating control and precision. The bike is tilted slightly to the left, adding to the sense of motion and excitement. The setting is a large indoor stadium, filled with a crowd of spectators who are watching the spectacle unfold. Their faces are a blur of anticipation and awe. The background is adorned with various advertisements, adding a splash of color and life to the scene. Despite the action-packed nature of the image, there's a certain harmony to it. The motorcyclist, the bike, the crowd, and the stadium all come together to create a snapshot of a moment filled with adrenaline and excitement. It's a testament to the skill and courage of the rider, and the thrill of the sport.</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><img src="data/125-output-base.jpg" alt="Baseline Result"></td>
+                        <td><img src="data/125-output-reward.jpg" alt="LongAlign Result"></td>
+                        <td>
+                            <div class="prompt">The image is a digital artwork of an animated female character. She has long, flowing blonde hair and is wearing a white armor with gold accents. The armor features a high collar and a chest plate with a cross symbol in the center. The character is holding a large, blue sword with a glowing blade. The background is a dark blue with red and blue sparks or particles floating around her. The character's expression is intense, with her eyes focused and her mouth slightly open. The overall style of the image is reminiscent of Japanese anime or manga.</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><img src="data/132-output-base.jpg" alt="Baseline Result"></td>
+                        <td><img src="data/132-output-reward.jpg" alt="LongAlign Result"></td>
+                        <td>
+                            <div class="prompt">The image is a digital artwork depicting a nighttime scene. In the foreground, there are three silhouetted trees with curved branches, suggesting a tranquil setting. The trees are set against a dark sky, which is filled with numerous stars and a faint, milky-way-like nebula. The colors in the sky transition from deep blues at the top to lighter purples and pinks near the horizon, indicating either dawn or dusk. The overall atmosphere of the image is serene and somewhat mystical, with a sense of depth and vastness conveyed by the starry sky. There are no visible texts or distinguishing marks that provide additional context or information about the image. The style of the artwork is realistic with a focus on creating a peaceful and somewhat ethereal nighttime landscape.</div>
+                        </td>
+                    </tr>
+                    <!-- <tr>
+                        <td><img src="data/204-output-base.jpg" alt="Baseline Result"></td>
+                        <td><img src="data/204-output-reward.jpg" alt="LongAlign Result"></td>
+                        <td>
+                            <div class="prompt">The image depicts a nighttime scene of a train journeying through a mountainous landscape. The train, with its headlights on, is traveling on a track that cuts through the center of the image. The train is pulling a single car behind it. The landscape is dominated by snow-covered mountains on both sides of the track, with the mountains appearing to be illuminated by a greenish-blue light. The sky above is a deep purple, dotted with stars. The foreground of the image shows the front of a train cabin, with the headlights and dashboard visible. The overall style of the image is reminiscent of a digital painting or illustration, with a focus on vibrant colors and a sense of motion.</div>
+                        </td>
+                    </tr> -->
+                    <tr>
+                        <td><img src="data/217-output-base.jpg" alt="Baseline Result"></td>
+                        <td><img src="data/217-output-reward.jpg" alt="LongAlign Result"></td>
+                        <td>
+                            <div class="prompt">In the image, there's a lively scene unfolding in a room with a wooden floor and a white wall in the background. Two individuals are engaged in a discussion, standing in front of a bulletin board. The bulletin board, made of wood, is adorned with two posters. One poster is white with black text, while the other is black with white text. The person on the left, clad in a green shirt, is gesturing with their hands, perhaps emphasizing a point or explaining something. On the right, the other person, wearing a black jacket, is attentively listening, their gaze fixed on the person in green. The interaction between the two individuals suggests a discussion or presentation of some sort. The bulletin board, with its two posters, serves as the backdrop for this exchange.</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><img src="data/239-output-base.jpg" alt="Baseline Result"></td>
+                        <td><img src="data/239-output-reward.jpg" alt="LongAlign Result"></td>
+                        <td>
+                            <div class="prompt">The image portrays a female character with a fantasy-inspired design. She has long, dark hair that cascades down her shoulders. Her skin is pale, and her eyes are a striking shade of blue. The character's face is adorned with intricate gold and pink makeup, which includes elaborate patterns and designs around her eyes and on her cheeks. Atop her head, she wears a crown made of gold and pink roses, with the roses arranged in a circular pattern. The crown is detailed, with each rose appearing to have a glossy finish. The background of the image is dark, which contrasts with the character's pale skin and the bright colors of her makeup and attire. The lighting in the image highlights the character's features and the details of her makeup and attire, creating a dramatic and captivating effect. There are no visible texts or brands in the image. The style of the image is highly stylized and artistic, with a focus on the character's beauty and the intricate details of her makeup and attire. The image is likely a digital artwork or a concept illustration, given the level of detail and the fantastical elements present.</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><img src="data/260-output-base.jpg" alt="Baseline Result"></td>
+                        <td><img src="data/260-output-reward.jpg" alt="LongAlign Result"></td>
+                        <td>
+                            <div class="prompt">The image presents a dramatic and surreal scene set against a dark, cloudy sky. Dominating the center of the image is a large, black ring, which appears to be a portal or vortex. This ring is encircled by a halo of light, creating a stark contrast against the dark sky. The light seems to emanate from the center of the ring, suggesting a source of power or energy. Beyond the ring, the sky is filled with clouds that are illuminated by the light from the ring. The clouds are dense and appear to be in motion, adding a sense of dynamism to the scene. The colors in the image are predominantly dark and black, with the light from the ring providing a stark contrast. The overall composition of the image is balanced, with the ring centrally located and the clouds filling the rest of the frame. The use of light and shadow creates a sense of depth and dimension, drawing the viewer's eye towards the center of the image. Despite the fantastical elements, the image is grounded in a realistic aesthetic. The clouds and sky are rendered with a high level of detail, and the colors are naturalistic. This combination of realism and fantasy creates a visually striking image that invites the viewer to imagine what lies beyond the ring.</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><img src="data/104-output-base.jpg" alt="Baseline Result"></td>
+                        <td><img src="data/104-output-reward.jpg" alt="LongAlign Result"></td>
+                        <td>
+                            <div class="prompt">The image is a digital illustration featuring a stylized female character in the center. She has a short, blue, curly hairstyle and is wearing a bright orange jacket with a blue collar and a white logo on the left chest area. The jacket is unbuttoned, revealing a blue top underneath. She is also wearing black pants with a white stripe down the side, and her shoes are white with black accents. The character is standing against a vibrant orange background. To her right, there are various objects and illustrations that seem to be related to technology and gaming. These include a white game controller, a gray electronic device with buttons and a screen, a white keyboard, and a white monitor displaying a colorful graphic. In the top left corner of the image, there is a small, blue, curly hairstyle that matches the character's hair, suggesting a connection or theme between the character and the hairstyle. The overall style of the image is modern and graphic, with a focus on bold colors and clean lines. The illustration has a dynamic and energetic feel, with a sense of movement and activity suggested by the character's pose and the surrounding objects.</div>
+                        </td>
+                    </tr>
+                    <!-- Add more rows for additional experiments -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- <section class="code">
+        <h2>Code</h2>
+        <a href="#">[Link to Code Repository]</a>
+    </section> -->
+
+    <section>
+        <h2>Citation</h2>
+    <p>Please cite our paper if you find this work useful:</p>
+    <div class="citation-container">
+        <pre class="citation-code">@article{liu2024improving,
+         title={Improving Long-Text Alignment for Text-to-Image Diffusion Models},
+         author={Liu, Luping and Du, Chao and Pang, Tianyu and Wang, Zehan and Li, Chongxuan and Xu, Dong},
+         journal={arXiv preprint arXiv:2410.11817},
+         year={2024}
+}</pre>
+    </div>
+    </section>
+
+    <footer class="copyright">
+        &copy; 2025 LongAlign Project. All rights reserved.
+    </footer>
+
+</body>
+
+<script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      },
+      svg: {
+        fontCache: 'global'
+      }
+    };
+  </script>
+  <script type="text/javascript" id="MathJax-script" async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+  </script>
+
+<script>
+    // 平滑滚动效果
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+</script>
+
+</html>
