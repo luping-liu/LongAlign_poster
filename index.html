@@ -75,15 +75,7 @@
         } 
 
         /* Table Styling */
-        
         .table-container {
-            overflow-x: auto; /* 保持水平滚动 */
-            margin-left: calc(-1 * var(--body-margin)); /* 向左超出 body 边距 */
-            margin-right: calc(-1 * var(--body-margin)); /* 向右超出 body 边距 */
-        }
-
-        .table-container {
-            overflow-x: auto; /* 保持水平滚动 */
             /* 默认情况下，保持在屏幕范围内 */
             margin-left: 0;
             margin-right: 0;
@@ -152,6 +144,10 @@
             display: block; /* 将图片设置为块级元素 */
             margin: 0 auto; /* 左右自动边距以居中 */
             margin-bottom: 0.25em;
+        }
+
+        .scroll-container {
+            overflow-x: auto; /* 为公式容器添加水平滚动条 */
         }
 
         .copyright {
@@ -237,11 +233,11 @@
         <ul>
         <li><strong>For representation encoding:</strong> We encode each segment (e.g., each sentence) using CLIP and then merge the embeddings. A careful merging strategy is employed to manage special tokens (&lt;sot&gt;, &lt;eot&gt;, &lt;pad&gt;) to avoid issues with duplicated embeddings for these tokens after merging.</li>
         <li><strong>For evaluation and reward fine-tuning:</strong> We introduce a segment-level loss function $\mathcal{L}_{i \succ j}^{\text{seg}}$ that allows CLIP-based preference models to process long texts and produce detailed segment-level preference scores (Denscore). 
-        <p>
+        <div class="scroll-container"><p>
             \[
             \mathcal{L}_{i \succ j}^{\text{seg}} = \frac{\exp\left(\sum_{k=i}^K \mathcal{R}(x_i, \hat{p}_k) / K\right)}{\exp\left(\sum_{k=i}^K \mathcal{R}(x_i, \hat{p}_k) / K\right) + \exp\left(\sum_{k=i}^K \mathcal{R}(x_j, \hat{p}_k) / K\right)},
             \]
-        </p>
+        </p></div>
         where we split the long-text condition \( p \) into \( K \) segments, denoted as \( \{\hat{p}_k\}_{k=1}^K \).
         </li>
         </ul>
@@ -255,17 +251,17 @@
         <ul>
         <li><strong>Preference orthogonal decomposition:</strong> Human preferences can be categorized into text-irrelevant and text-relevant components. The former leads to significant overfitting. Specifically, in CLIP's text embedding, these two components correspond to the common direction $\mathbf{V}$ and the remaining parts.
         </li>
-        <img src="data/decomposition.webp" alt="">
+        <div class="scroll-container"><img src="data/decomposition.webp" alt=""></div>
 
         <li><strong>Gradient-reweighted reward fine-tuning:</strong> Fine-tune the diffusion model with a reweighted gradient that minimizes the influence of the text-irrelevant component $\mathbf{V}$, thereby reducing overfitting and enhancing alignment.
-        <p>
+        <div class="scroll-container"><p>
             \[
             \partial_\theta (1-\mathbb{E}_{x_T, p}\mathcal{R}(x_0^*, p)) \approx -\mathbb{E}_{p}( (\omega (\eta \mathbf{V}) + \mathcal{C}_{P}^{\bot}(p))^T \mathbb{E}_{x_T} \partial_{\theta} (\mathcal{C}_{X}(x_0^*)) ),
             \]
-        </p>
+        </p></div>
         where $\omega$ is the reweighting factor for the common direction $\mathbf{V}$.
         </li>
-        <img src="data/more_reward.webp" alt="">
+        <div class="scroll-container"><img src="data/more_reward.webp" alt=""></div>
         </ul>
 
     </section>
@@ -274,7 +270,7 @@
         <h2>Result</h2>
         
         The results compare the original SDXL with our LongAlign fine-tuned version of SDXL.
-        <div class="table-container">
+        <div class="table-container scroll-container">
             <table class="experiment-table" id="experiment-table">
                 <thead>
                     <tr>
